@@ -8,3 +8,6 @@ def create_embeddings(chunks: list[str]) -> list[list[float]]:
     # Convert NumPy array to a Python list
     # This makes it easier to store in JSON, databases, or vector stores
     return model.encode(chunks).tolist()
+
+def create_embedding(text: str) -> list[float]:
+    return model.encode(text).tolist()

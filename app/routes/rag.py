@@ -4,6 +4,10 @@ from app.services.pdf_service import extract_text_from_pdf
 from app.services.chunk_service import create_chunks
 from app.services.embedding_service import create_embeddings
 from app.services.vector_store import store_chunks
+from app.schemas.chat import ChatRequest
+from app.services.llm_service import generate_answer
+from app.services.vector_store import retrieve_documents
+from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -12,6 +16,7 @@ UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True) 
 
 
+# Route to handle file uploads
 @router.post("/upload")
 async def upload_file(
     # ... means required parameter
@@ -42,4 +47,47 @@ async def upload_file(
     "filename": file.filename,
     "chunks": len(chunks),
     "message": "Stored in ChromaDB"
+}
+
+# Pydantic model to validate request body
+class QueryRequest(BaseModel):
+    question: str
+
+# Route to handle search queries
+@router.post("/search")
+def search_documents(
+    payload: QueryRequest
+):
+    # embedding = create_embedding(
+    #     payload.question
+    # )
+
+    # results = search_chunks(embedding)
+
+    document = retrieve_documents(payload.question)
+
+
+    # return results
+    return {
+    "question": payload.question,
+    "retrieved_chunks":document
+}
+
+@router.post("/chat")
+def chat(
+    data: ChatRequest
+):
+    documents = retrieve_documents(data.question)
+
+
+    context = "\n\n".join(documents)
+
+    answer = generate_answer(
+    question=data.question,
+    context=context
+)
+    
+    return {
+    "question": data.question,
+    "answer": answer
 }
