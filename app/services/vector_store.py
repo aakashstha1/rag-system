@@ -1,5 +1,6 @@
 import chromadb
 from app.services.embedding_service import create_embedding
+import uuid
 
 # Create a ChromaDB client and store data in the "chroma_db" folder
 client = chromadb.PersistentClient(
@@ -12,22 +13,37 @@ collection = client.get_or_create_collection(
 )
 
 # Store text chunks and their embeddings in ChromaDB
-def store_chunks(chunks, embeddings):
+def store_chunks(
+    chunks: list[str],
+    embeddings: list[list[float]],
+    filename: str
+) -> str:
 
-    # List to store unique IDs for each chunk
-    ids = []
+    document_id = str(uuid.uuid4())
 
-    # Create an ID for every chunk
-    for i in range(len(chunks)):
-        ids.append(str(i))
 
-    # Save IDs, text chunks, and embeddings to the collection
+    ids = [
+        f"{document_id}_chunk_{i}"
+        for i in range(len(chunks))
+    ]
+
+    metadatas = [
+    {
+        "document_id": document_id,
+        "filename": filename,
+        "chunk_index": i
+    }
+    for i in range(len(chunks))
+    ]
+
     collection.add(
         ids=ids,
         documents=chunks,
-        embeddings=embeddings
+        embeddings=embeddings,
+        metadatas=metadatas
     )
 
+    return document_id
     
 # Search for similar chunks
 def search_chunks(
@@ -35,9 +51,14 @@ def search_chunks(
     n_results: int = 3
 ):
     results = collection.query(
-        query_embeddings=[query_embedding],
-        n_results=n_results
-    )
+    query_embeddings=[query_embedding],
+    n_results=n_results,
+    include=[
+        "documents",
+        "metadatas",
+        "distances"
+    ]
+)
 
     return results
 
@@ -53,4 +74,8 @@ def retrieve_documents(
         query_embedding
     )
 
-    return results["documents"][0]
+    return {
+    "documents": results["documents"][0],
+    "metadatas": results["metadatas"][0],
+    "distances": results["distances"][0]
+}

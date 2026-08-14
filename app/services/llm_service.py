@@ -34,11 +34,19 @@ Question:
     # Send the prompt to the model
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
+       messages=[
+        {
+            "role":"system",
+            "content":"""
+            You must answer only from context.
+            If answer is absent say:
+            'I don't know.'
+            """
+        },
+        {
+            "role":"user",
+            "content": prompt
+        }
         ]
     )
 

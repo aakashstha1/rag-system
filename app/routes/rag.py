@@ -34,19 +34,25 @@ async def upload_file(
 
     text = extract_text_from_pdf(str(file_path))
 
+    if not text.strip():
+        return {
+            "error": "No extractable text found"
+        }
+
     chunks = create_chunks(text)
 
     embeddings = create_embeddings(chunks)
 
-    store_chunks(
+    document_id = store_chunks(
     chunks,
-    embeddings
+    embeddings,
+    file.filename
 )
 
     return {
+    "document_id": document_id,
     "filename": file.filename,
-    "chunks": len(chunks),
-    "message": "Stored in ChromaDB"
+    "chunks": len(chunks)
 }
 
 # Pydantic model to validate request body
@@ -77,17 +83,30 @@ def search_documents(
 def chat(
     data: ChatRequest
 ):
-    documents = retrieve_documents(data.question)
+    retrieved = retrieve_documents(
+        data.question
+    )
 
+    documents = retrieved["documents"]
 
-    context = "\n\n".join(documents)
+    context = "\n\n".join(
+        documents
+    )
 
     answer = generate_answer(
-    question=data.question,
-    context=context
-)
+        question=data.question,
+        context=context
+    )
+
     
+    sources = list({
+    metadata["filename"]
+    for metadata in retrieved["metadatas"]
+    if metadata and "filename" in metadata
+    })
+
     return {
-    "question": data.question,
-    "answer": answer
-}
+        "question": data.question,
+        "answer": answer,
+        "sources": sources
+    }
