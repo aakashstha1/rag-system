@@ -1,4 +1,4 @@
-# RAGIFY 🚀
+# RAGIFY - RAG System 
 
 A simple Retrieval-Augmented Generation (RAG) system built with FastAPI.
 
@@ -28,7 +28,7 @@ The application allows users to:
 ## Project Structure
 
 ```text
-ragify/
+rag-system/
 │
 ├── app/
 │   ├── routes/
@@ -90,8 +90,8 @@ Ask questions about uploaded documents.
 ### Clone Repository
 
 ```bash
-git clone <repository-url>
-cd ragify
+git clone https://github.com/aakashstha1/rag-system.git
+cd rag-system
 ```
 
 ### Create Virtual Environment
@@ -155,6 +155,38 @@ Swagger Documentation:
 ```text
 http://127.0.0.1:8000/docs
 ```
+
+---
+
+## API Documentation
+
+FastAPI automatically generates interactive API documentation.
+
+### Swagger UI
+
+Open:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+You can:
+
+- View all available endpoints
+- Test API requests directly from the browser
+- Upload PDF files
+- Send chat queries
+- Inspect request and response schemas
+
+### ReDoc
+
+Open:
+
+```text
+http://127.0.0.1:8000/redoc
+```
+
+This provides an alternative API documentation interface.
 
 ---
 
