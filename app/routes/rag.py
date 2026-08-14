@@ -11,83 +11,109 @@ from pydantic import BaseModel
 
 router = APIRouter()
 
+# Folder where uploaded PDFs will be stored
 UPLOAD_DIR = Path("uploads")
-# Create the directory if it doesn't exist
-UPLOAD_DIR.mkdir(exist_ok=True) 
+
+# Create the uploads folder if it doesn't exist
+UPLOAD_DIR.mkdir(exist_ok=True)
 
 
-# Route to handle file uploads
+# Route to upload a PDF file
 @router.post("/upload")
 async def upload_file(
-    # ... means required parameter
+    # Uploaded file is required
     file: UploadFile = File(...)
 ):
+    # Create the file path
     file_path = UPLOAD_DIR / file.filename
-    # Open the file in write-binary mode ("wb")
-    # If the file doesn't exist, it will be created
-    # If it already exists, its contents will be overwritten
+
+    # Save the uploaded file to disk
     with open(file_path, "wb") as buffer:
-         # Read the uploaded file's contents as bytes
-        # 'await' is needed because UploadFile.read() is asynchronous
-        # Write the bytes to the file on disk
         buffer.write(await file.read())
 
+    # Extract text from the PDF
     text = extract_text_from_pdf(str(file_path))
 
+    # Return an error if no text was found
+    if not text.strip():
+        return {
+            "error": "No extractable text found"
+        }
+
+    # Split text into smaller chunks
     chunks = create_chunks(text)
 
+    # Create embeddings for all chunks
     embeddings = create_embeddings(chunks)
 
-    store_chunks(
-    chunks,
-    embeddings
-)
+    # Store chunks and embeddings in ChromaDB
+    document_id = store_chunks(
+        chunks,
+        embeddings,
+        file.filename
+    )
 
+    # Return upload information
     return {
-    "filename": file.filename,
-    "chunks": len(chunks),
-    "message": "Stored in ChromaDB"
-}
+        "document_id": document_id,
+        "filename": file.filename,
+        "chunks": len(chunks)
+    }
 
-# Pydantic model to validate request body
+
+# Request body model for search endpoint
 class QueryRequest(BaseModel):
     question: str
 
-# Route to handle search queries
+
+# Route to search relevant chunks
 @router.post("/search")
 def search_documents(
     payload: QueryRequest
 ):
-    # embedding = create_embedding(
-    #     payload.question
-    # )
-
-    # results = search_chunks(embedding)
-
+    # Retrieve similar chunks based on the question
     document = retrieve_documents(payload.question)
 
-
-    # return results
     return {
-    "question": payload.question,
-    "retrieved_chunks":document
-}
+        "question": payload.question,
+        "retrieved_chunks": document
+    }
 
+
+# Route to chat with uploaded documents
 @router.post("/chat")
 def chat(
     data: ChatRequest
 ):
-    documents = retrieve_documents(data.question)
+    # Retrieve relevant chunks for the question
+    retrieved = retrieve_documents(
+        data.question
+    )
 
+    # Extract the retrieved documents
+    documents = retrieved["documents"]
 
-    context = "\n\n".join(documents)
+    # Combine documents into a single context
+    context = "\n\n".join(
+        documents
+    )
 
+    # Generate an answer using the LLM
     answer = generate_answer(
-    question=data.question,
-    context=context
-)
-    
+        question=data.question,
+        context=context
+    )
+
+    # Extract unique source filenames
+    sources = list({
+        metadata["filename"]
+        for metadata in retrieved["metadatas"]
+        if metadata and "filename" in metadata
+    })
+
+    # Return the answer and source documents
     return {
-    "question": data.question,
-    "answer": answer
-}
+        "question": data.question,
+        "answer": answer,
+        "sources": sources
+    }

@@ -1,5 +1,6 @@
 import chromadb
 from app.services.embedding_service import create_embedding
+import uuid
 
 # Create a ChromaDB client and store data in the "chroma_db" folder
 client = chromadb.PersistentClient(
@@ -12,45 +13,78 @@ collection = client.get_or_create_collection(
 )
 
 # Store text chunks and their embeddings in ChromaDB
-def store_chunks(chunks, embeddings):
+def store_chunks(
+    chunks: list[str],
+    embeddings: list[list[float]],
+    filename: str
+) -> str:
 
-    # List to store unique IDs for each chunk
-    ids = []
+    # Generate a unique ID for the uploaded document
+    document_id = str(uuid.uuid4())
 
-    # Create an ID for every chunk
-    for i in range(len(chunks)):
-        ids.append(str(i))
+    # Create a unique ID for each chunk
+    ids = [
+        f"{document_id}_chunk_{i}"
+        for i in range(len(chunks))
+    ]
 
-    # Save IDs, text chunks, and embeddings to the collection
+    # Store extra information about each chunk
+    metadatas = [
+        {
+            "document_id": document_id,
+            "filename": filename,
+            "chunk_index": i
+        }
+        for i in range(len(chunks))
+    ]
+
+    # Save chunks, embeddings, and metadata to ChromaDB
     collection.add(
         ids=ids,
         documents=chunks,
-        embeddings=embeddings
+        embeddings=embeddings,
+        metadatas=metadatas
     )
 
-    
-# Search for similar chunks
+    # Return the document ID
+    return document_id
+
+
+# Search for similar chunks using a query embedding
 def search_chunks(
     query_embedding,
     n_results: int = 3
 ):
     results = collection.query(
         query_embeddings=[query_embedding],
-        n_results=n_results
+        n_results=n_results,
+        include=[
+            "documents",
+            "metadatas",
+            "distances"
+        ]
     )
 
     return results
 
 
+# Retrieve the most relevant documents for a question
 def retrieve_documents(
     question: str
 ):
+    # Convert the question into an embedding
     query_embedding = create_embedding(
         question
     )
 
+    # Search for similar chunks
     results = search_chunks(
         query_embedding
     )
 
-    return results["documents"][0]
+    # Return documents, metadata, and similarity scores
+    return {
+        "documents": results["documents"][0],
+        "metadatas": results["metadatas"][0],
+        "distances": results["distances"][0]
+    }
