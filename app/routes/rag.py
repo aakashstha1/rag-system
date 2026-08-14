@@ -105,11 +105,13 @@ def chat(
     )
 
     # Extract unique source filenames
-    sources = list({
-        metadata["filename"]
-        for metadata in retrieved["metadatas"]
-        if metadata and "filename" in metadata
-    })
+    sources = [
+    {
+        "filename": meta["filename"],
+        "chunk_index": meta["chunk_index"]
+    }
+    for meta in retrieved["metadatas"]
+    ]
 
     # Return the answer and source documents
     return {

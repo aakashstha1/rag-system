@@ -22,6 +22,7 @@ The application allows users to:
 - Sentence Transformers
 - Groq
 - PyPDF
+- LangChain Text Splitters
 
 ---
 
@@ -74,6 +75,9 @@ Search relevant document chunks using semantic search.
 - Converts question into embedding
 - Searches ChromaDB
 - Returns most relevant chunks
+- Returns chunk metadata
+- Returns similarity scores (distances)
+- Supports retrieval debugging
 
 ### Chat with Documents
 
@@ -82,6 +86,9 @@ Ask questions about uploaded documents.
 - Retrieves relevant chunks
 - Sends context and question to Groq
 - Generates final answer
+- Uses retrieved context from ChromaDB
+- Returns source citations
+- Supports multiple uploaded documents
 
 ---
 
@@ -237,46 +244,60 @@ Response:
 ```json
 {
   "question": "What is FastAPI?",
-  "answer": "FastAPI is a modern Python framework..."
+  "answer": "FastAPI is a modern Python framework...",
+  "sources": [
+    {
+      "filename": "fastapi.pdf",
+      "chunk_index": 2
+    }
+  ]
 }
 ```
-
 ---
 
-## How It Works
+## Metadata Stored
+
+Each chunk is stored with:
+
+```json
+{
+  "document_id": "uuid",
+  "filename": "document.pdf",
+  "chunk_index": 0
+}
+
+```
+---
+
+## Architecture
 
 ```text
 PDF Upload
     ↓
-Text Extraction
+PDF Extraction (PyPDF)
     ↓
-Chunking
+Chunking (LangChain)
     ↓
-Embeddings
+Embeddings (Sentence Transformers)
     ↓
-ChromaDB Storage
+ChromaDB Vector Store
     ↓
-User Question
-    ↓
-Semantic Search
-    ↓
-Relevant Chunks
+Semantic Retrieval
     ↓
 Groq LLM
     ↓
-Final Answer
+Answer + Source Citations
 ```
 
 ---
 
 ## Future Improvements
 
-- Multiple document support
-- Source citations
 - Conversation memory
-- Document metadata
 - Frontend interface
 - Docker deployment
+- Hybrid search (keyword + vector search)
+- Reranking for improved retrieval
 
 ---
 
