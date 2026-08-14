@@ -1,0 +1,28 @@
+import chromadb
+
+# Create a ChromaDB client and store data in the "chroma_db" folder
+client = chromadb.PersistentClient(
+    path="chroma_db"
+)
+
+# Create the collection if it doesn't exist, otherwise use the existing one
+collection = client.get_or_create_collection(
+    name="documents"
+)
+
+# Store text chunks and their embeddings in ChromaDB
+def store_chunks(chunks, embeddings):
+
+    # List to store unique IDs for each chunk
+    ids = []
+
+    # Create an ID for every chunk
+    for i in range(len(chunks)):
+        ids.append(str(i))
+
+    # Save IDs, text chunks, and embeddings to the collection
+    collection.add(
+        ids=ids,
+        documents=chunks,
+        embeddings=embeddings
+    )

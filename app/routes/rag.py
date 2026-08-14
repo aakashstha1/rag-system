@@ -2,7 +2,8 @@ from fastapi import APIRouter, UploadFile, File
 from pathlib import Path
 from app.services.pdf_service import extract_text_from_pdf
 from app.services.chunk_service import create_chunks
-from app.services.embedding_service import create_embedding
+from app.services.embedding_service import create_embeddings
+from app.services.vector_store import store_chunks
 
 router = APIRouter()
 
@@ -26,15 +27,19 @@ async def upload_file(
         # Write the bytes to the file on disk
         buffer.write(await file.read())
 
-    text = extract_text_from_pdf(file_path)
+    text = extract_text_from_pdf(str(file_path))
 
     chunks = create_chunks(text)
 
-    embedding = create_embedding(chunks[0])
+    embeddings = create_embeddings(chunks)
+
+    store_chunks(
+    chunks,
+    embeddings
+)
 
     return {
-        "message": "File uploaded successfully",
-        "filename": file.filename,
-        "chunks": len(chunks),
-        "embedding dimension":len(embedding)
-    }
+    "filename": file.filename,
+    "chunks": len(chunks),
+    "message": "Stored in ChromaDB"
+}
