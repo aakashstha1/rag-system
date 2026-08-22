@@ -9,7 +9,6 @@ client = Groq(
     api_key=os.environ.get("GROQ_API_KEY")
 )
 
-print(client.api_key)
 # Generate an answer using the provided context
 def generate_answer(
     question: str,
