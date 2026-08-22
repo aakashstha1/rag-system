@@ -9,6 +9,7 @@ client = Groq(
     api_key=os.environ.get("GROQ_API_KEY")
 )
 
+print(client.api_key)
 # Generate an answer using the provided context
 def generate_answer(
     question: str,
@@ -33,7 +34,7 @@ Question:
 
     # Send the prompt to the model
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="openai/gpt-oss-20b",
        messages=[
         {
             "role":"system",
