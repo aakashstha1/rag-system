@@ -1,0 +1,169 @@
+{
+  "communities": {
+    "0": [
+      "app_routes_rag",
+      "app_routes_rag_chat",
+      "app_schemas_chat",
+      "app_schemas_chat_chatrequest",
+      "app_schemas_chat_py_basemodel",
+      "app_services_llm_service",
+      "app_services_llm_service_generate_answer",
+      "app_services_pdf_service",
+      "app_services_pdf_service_extract_text_from_pdf"
+    ],
+    "1": [
+      "app_routes_rag_upload_file",
+      "app_services_chunk_service",
+      "app_services_chunk_service_create_chunks",
+      "app_services_embedding_service_create_embeddings",
+      "app_services_vector_store_store_chunks",
+      "uploadfile"
+    ],
+    "2": [
+      "app_services_embedding_service",
+      "app_services_embedding_service_create_embedding",
+      "app_services_vector_store",
+      "app_services_vector_store_retrieve_documents",
+      "app_services_vector_store_search_chunks"
+    ],
+    "3": [
+      "app_routes_rag_py_basemodel",
+      "app_routes_rag_queryrequest",
+      "app_routes_rag_search_documents",
+      "post"
+    ],
+    "4": [
+      "app_main",
+      "app_main_root",
+      "get"
+    ],
+    "5": [
+      "app_init"
+    ],
+    "6": [
+      "run"
+    ]
+  },
+  "cohesion": {
+    "0": 0.3611111111111111,
+    "1": 0.3333333333333333,
+    "2": 0.7,
+    "3": 0.5,
+    "4": 0.6666666666666666,
+    "5": 1.0,
+    "6": 1.0
+  },
+  "gods": [
+    {
+      "id": "app_routes_rag_upload_file",
+      "label": "upload_file()",
+      "degree": 7
+    },
+    {
+      "id": "app_services_vector_store_retrieve_documents",
+      "label": "retrieve_documents()",
+      "degree": 6
+    },
+    {
+      "id": "app_routes_rag_chat",
+      "label": "chat()",
+      "degree": 5
+    },
+    {
+      "id": "app_routes_rag_search_documents",
+      "label": "search_documents()",
+      "degree": 4
+    },
+    {
+      "id": "app_schemas_chat_chatrequest",
+      "label": "ChatRequest",
+      "degree": 4
+    },
+    {
+      "id": "app_routes_rag_queryrequest",
+      "label": "QueryRequest",
+      "degree": 3
+    },
+    {
+      "id": "app_services_chunk_service_create_chunks",
+      "label": "create_chunks()",
+      "degree": 3
+    },
+    {
+      "id": "app_services_embedding_service_create_embeddings",
+      "label": "create_embeddings()",
+      "degree": 3
+    },
+    {
+      "id": "app_services_embedding_service_create_embedding",
+      "label": "create_embedding()",
+      "degree": 3
+    },
+    {
+      "id": "app_services_llm_service_generate_answer",
+      "label": "generate_answer()",
+      "degree": 3
+    }
+  ],
+  "surprises": [
+    {
+      "source": "upload_file()",
+      "target": "extract_text_from_pdf()",
+      "source_files": [
+        "app/routes/rag.py",
+        "app/services/pdf_service.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "search_documents()",
+      "target": "retrieve_documents()",
+      "source_files": [
+        "app/routes/rag.py",
+        "app/services/vector_store.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "chat()",
+      "target": "ChatRequest",
+      "source_files": [
+        "app/routes/rag.py",
+        "app/schemas/chat.py"
+      ],
+      "confidence": "INFERRED",
+      "relation": "uses",
+      "why": "inferred connection - not explicitly stated in source"
+    },
+    {
+      "source": "chat()",
+      "target": "retrieve_documents()",
+      "source_files": [
+        "app/routes/rag.py",
+        "app/services/vector_store.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "upload_file()",
+      "target": "create_chunks()",
+      "source_files": [
+        "app/routes/rag.py",
+        "app/services/chunk_service.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "cross-file semantic connection"
+    }
+  ],
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
+}

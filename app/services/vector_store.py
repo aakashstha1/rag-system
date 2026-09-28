@@ -88,3 +88,45 @@ def retrieve_documents(
         "metadatas": results["metadatas"][0],
         "distances": results["distances"][0]
     }
+
+
+# Delete all chunks belonging to a single uploaded document
+def delete_document(document_id: str):
+    # Find the chunks belonging to this document before deleting, so the
+    # caller knows whether anything was removed and what the file was called
+    existing = collection.get(
+        where={"document_id": document_id}
+    )
+    deleted_count = len(existing["ids"])
+
+    filename = None
+    if deleted_count > 0:
+        filename = existing["metadatas"][0]["filename"]
+        collection.delete(
+            where={"document_id": document_id}
+        )
+
+    return {
+        "deleted_count": deleted_count,
+        "filename": filename
+    }
+
+    # List every uploaded document with its chunk count
+def list_documents():
+    # Only metadata is needed, so skip loading chunk text and embeddings
+    stored = collection.get(include=["metadatas"])
+
+    # Group chunks by document_id
+    documents = {}
+    for metadata in stored["metadatas"]:
+        doc = documents.setdefault(
+            metadata["document_id"],
+            {
+                "document_id": metadata["document_id"],
+                "filename": metadata["filename"],
+                "chunks": 0
+            }
+        )
+        doc["chunks"] += 1
+
+    return sorted(documents.values(), key=lambda d: d["filename"].lower())

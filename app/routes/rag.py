@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File, HTTPException
 from pathlib import Path
 from app.services.pdf_service import extract_text_from_pdf
 from app.services.chunk_service import create_chunks
@@ -6,7 +6,7 @@ from app.services.embedding_service import create_embeddings
 from app.services.vector_store import store_chunks
 from app.schemas.chat import ChatRequest
 from app.services.llm_service import generate_answer
-from app.services.vector_store import retrieve_documents
+from app.services.vector_store import retrieve_documents, delete_document, list_documents
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -58,6 +58,33 @@ async def upload_file(
         "document_id": document_id,
         "filename": file.filename,
         "chunks": len(chunks)
+    }
+
+
+# Route to list all uploaded documents stored in the vector database
+@router.get("/documents")
+def get_documents():
+    return list_documents()
+
+# Route to delete a previously uploaded document and its chunks
+@router.delete("/documents/{document_id}")
+def delete_uploaded_document(document_id: str):
+    # Remove the document's chunks/embeddings from ChromaDB
+    result = delete_document(document_id)
+
+    if result["deleted_count"] == 0:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    # Also remove the stored PDF file from disk, if it's still there
+    if result["filename"]:
+        file_path = UPLOAD_DIR / result["filename"]
+        if file_path.exists():
+            file_path.unlink()
+
+    return {
+        "document_id": document_id,
+        "filename": result["filename"],
+        "deleted_chunks": result["deleted_count"]
     }
 
 

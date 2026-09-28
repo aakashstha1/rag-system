@@ -289,6 +289,12 @@ Groq LLM
 Answer + Source Citations
 ```
 
+## GraphRAG Visualization
+
+The following graph shows the relationships and dependencies between the functions defined in the project.
+
+![Knowledge Graph](public/graphify-tree.png)
+
 ---
 
 ## Future Improvements
